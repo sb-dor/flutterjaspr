@@ -8,7 +8,6 @@ import '../components/counter.dart';
 // - this file and any imported file must be compilable for both server and client environments.
 // - this component and any child components will be built once on the server during pre-rendering and then
 //   again on the client during normal rendering.
-@client
 class Home extends StatefulComponent {
   const Home({super.key});
 

@@ -29,7 +29,7 @@ class App extends StatelessComponent {
         routes: [
           Route(path: '/', title: 'Home', builder: (context, state) => const Home()),
           Route(path: '/about', title: 'About', builder: (context, state) => const About()),
-          Route(path: '/items', title: "Items", builder: (context, state) => Items()),
+          Route(path: '/items', title: "Items", builder: (context, state) => const Items()),
         ],
       ),
     ]);
@@ -55,6 +55,12 @@ class App extends StatelessComponent {
         justifyContent: .center,
         alignItems: .center,
         flex: Flex(grow: 1),
+      ),
+      css('redirect-button').styles(
+        justifyContent: .center,
+        alignItems: .center,
+        flex: Flex(grow: 1),
+        fontSize: .vw(10),
       ),
     ]),
   ];

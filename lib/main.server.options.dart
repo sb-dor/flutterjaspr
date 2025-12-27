@@ -8,7 +8,6 @@ import 'package:jaspr/server.dart';
 import 'package:flutter_with_jaspr/components/counter.dart' as _counter;
 import 'package:flutter_with_jaspr/components/header.dart' as _header;
 import 'package:flutter_with_jaspr/pages/about.dart' as _about;
-import 'package:flutter_with_jaspr/pages/home.dart' as _home;
 import 'package:flutter_with_jaspr/app.dart' as _app;
 
 /// Default [ServerOptions] for use with your Jaspr project.
@@ -29,10 +28,7 @@ import 'package:flutter_with_jaspr/app.dart' as _app;
 /// ```
 ServerOptions get defaultServerOptions => ServerOptions(
   clientId: 'main.client.dart.js',
-  clients: {
-    _about.About: ClientTarget<_about.About>('about'),
-    _home.Home: ClientTarget<_home.Home>('home'),
-  },
+
   styles: () => [
     ..._counter.CounterState.styles,
     ..._header.Header.styles,
