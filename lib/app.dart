@@ -1,3 +1,4 @@
+import 'package:flutter_with_jaspr/pages/items.dart';
 import 'package:jaspr/dom.dart';
 import 'package:jaspr/jaspr.dart';
 import 'package:jaspr_router/jaspr_router.dart';
@@ -16,14 +17,21 @@ class App extends StatelessComponent {
   @override
   Component build(BuildContext context) {
     // This method is rerun every time the component is rebuilt.
-    
+
     // Renders a <div class="main"> html element with children.
     return div(classes: 'main', [
       const Header(),
-      Router(routes: [
-        Route(path: '/', title: 'Home', builder: (context, state) => const Home()),
-        Route(path: '/about', title: 'About', builder: (context, state) => const About()),
-      ]),
+
+      /// the is the main thing that routing works in flutter
+      /// so this should be in your application to switching pages work
+      /// because you can remove [Header] but routing will still work
+      Router(
+        routes: [
+          Route(path: '/', title: 'Home', builder: (context, state) => const Home()),
+          Route(path: '/about', title: 'About', builder: (context, state) => const About()),
+          Route(path: '/items', title: "Items", builder: (context, state) => Items()),
+        ],
+      ),
     ]);
   }
 
