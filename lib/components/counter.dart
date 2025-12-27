@@ -3,6 +3,20 @@ import 'package:jaspr/jaspr.dart';
 
 import '../constants/theme.dart';
 
+class CounterChangeNotifier with ChangeNotifier {
+  int counter = 0;
+
+  void increment() {
+    counter++;
+    notifyListeners();
+  }
+
+  void decrement() {
+    counter--;
+    notifyListeners();
+  }
+}
+
 class Counter extends StatefulComponent {
   const Counter({super.key});
 
@@ -11,27 +25,30 @@ class Counter extends StatefulComponent {
 }
 
 class CounterState extends State<Counter> {
-  int count = 0;
+  final _counterController = CounterChangeNotifier();
 
   @override
   Component build(BuildContext context) {
-    return div([
-      div(classes: 'counter', [
-        button(
-          onClick: () {
-            setState(() => count--);
-          },
-          [.text('-')],
-        ),
-        span([.text('$count')]),
-        button(
-          onClick: () {
-            setState(() => count++);
-          },
-          [.text('+')],
-        ),
+    return ChangeNotifierBuilder(
+      listenable: _counterController,
+      component: (context) => div([
+        div(classes: 'counter', [
+          button(
+            onClick: () {
+              _counterController.decrement();
+            },
+            [.text('-')],
+          ),
+          span([.text('${_counterController.counter}')]),
+          button(
+            onClick: () {
+              _counterController.increment();
+            },
+            [.text('+')],
+          ),
+        ]),
       ]),
-    ]);
+    );
   }
 
   @css
@@ -40,18 +57,20 @@ class CounterState extends State<Counter> {
       css('&').styles(
         display: .flex,
         padding: .symmetric(vertical: 10.px),
-        border: .symmetric(vertical: .solid(color: primaryColor, width: 2.px)),
+        border: .symmetric(
+          vertical: .solid(color: primaryColor, width: 2.px),
+        ),
         alignItems: .center,
       ),
       css('button', [
         css('&').styles(
           display: .flex,
           width: 2.em,
-          height: 2.em, 
-          border: .unset, 
+          height: 2.em,
+          border: .unset,
           radius: .all(.circular(2.em)),
           cursor: .pointer,
-          justifyContent: .center, 
+          justifyContent: .center,
           alignItems: .center,
           fontSize: 2.rem,
           backgroundColor: Colors.transparent,
@@ -63,11 +82,49 @@ class CounterState extends State<Counter> {
       css('span').styles(
         minWidth: 2.5.em,
         padding: .symmetric(horizontal: 2.rem),
-        boxSizing: .borderBox, 
-        color: primaryColor, 
+        boxSizing: .borderBox,
+        color: primaryColor,
         textAlign: .center,
         fontSize: 4.rem,
       ),
     ]),
   ];
+}
+
+class ChangeNotifierBuilder extends StatefulComponent {
+  const ChangeNotifierBuilder({
+    super.key,
+    required this.listenable,
+    required this.component,
+  });
+
+  final Listenable listenable;
+  final Component Function(BuildContext context) component;
+
+  @override
+  State<ChangeNotifierBuilder> createState() => _ChangeNotifierBuilderState();
+}
+
+class _ChangeNotifierBuilderState extends State<ChangeNotifierBuilder> {
+  @override
+  void initState() {
+    super.initState();
+    component.listenable.addListener(_listener);
+  }
+
+  @override
+  void dispose() {
+    component.listenable.removeListener(_listener);
+    super.dispose();
+  }
+
+  void _listener() {
+    if (!mounted) return;
+    setState(() {});
+  }
+
+  @override
+  Component build(BuildContext context) {
+    return component.component(context);
+  }
 }
