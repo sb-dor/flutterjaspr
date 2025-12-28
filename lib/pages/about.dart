@@ -45,6 +45,6 @@ class About extends StatelessComponent {
 
   @css
   static List<StyleRule> get styles => [
-    css('ol').styles(maxWidth: 500.px),
+    css('ol').styles(maxWidth: 1000.px),
   ];
 }
