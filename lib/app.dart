@@ -1,4 +1,5 @@
 import 'package:flutter_with_jaspr/pages/items.dart';
+import 'package:flutter_with_jaspr/pages/todos.dart';
 import 'package:jaspr/dom.dart';
 import 'package:jaspr/jaspr.dart';
 import 'package:jaspr_router/jaspr_router.dart';
@@ -30,6 +31,7 @@ class App extends StatelessComponent {
           Route(path: '/', title: 'Home', builder: (context, state) => const Home()),
           Route(path: '/about', title: 'About', builder: (context, state) => const About()),
           Route(path: '/items', title: "Items", builder: (context, state) => const Items()),
+          Route(path: '/todos', title: "Items", builder: (context, state) => const TodoApp()),
         ],
       ),
     ]);
