@@ -1,10 +1,11 @@
 import 'dart:collection';
+import 'dart:convert';
 import 'package:flutter_with_jaspr/change_notifier_builder.dart';
 import 'package:flutter_with_jaspr/models/todo.dart';
 import 'package:jaspr/dom.dart';
 import 'package:jaspr/jaspr.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-@client
 class TodoApp extends StatefulComponent {
   const TodoApp({super.key});
 
@@ -12,23 +13,45 @@ class TodoApp extends StatefulComponent {
   State<TodoApp> createState() => _TodoAppState();
 }
 
-class _TodoAppState extends State<TodoApp> {
-  final _todoController = TodoController();
+class _TodoAppState extends State<TodoApp> with PreloadStateMixin {
+  TodoController? _todoController;
   final _inputId = 'todo-input';
   String _inputData = '';
 
   @override
+  void initState() {
+    super.initState();
+    SharedPreferences.getInstance().then((pref) {
+      _todoController = TodoController(sharedPreferences: pref);
+      setState(() {});
+      _todoController?.loadTodos();
+    });
+    print('was called: client');
+  }
+
+  @override
+  Future<void> preloadState() async {}
+
+  @override
   Component build(BuildContext context) {
+    if (_todoController == null) {
+      return div([]);
+    }
     return ChangeNotifierBuilder(
-      listenable: _todoController,
+      listenable: _todoController!,
       builder: (context) {
-        final completedCount = _todoController.todos.where((t) => t.isCompleted).length;
-        final totalCount = _todoController.todos.length;
+        final completedCount = _todoController!.todos.where((t) => t.isCompleted).length;
+        final totalCount = _todoController!.todos.length;
 
         return section(
           styles: Styles(
+            display: .flex,
             minHeight: 100.vh,
             padding: .all(24.px),
+            border: .symmetric(
+              vertical: .solid(color: .currentColor, width: 2.px),
+            ),
+            alignItems: .center,
             backgroundColor: Color.rgb(248, 250, 252),
           ),
           [
@@ -165,7 +188,7 @@ class _TodoAppState extends State<TodoApp> {
                         styles: Styles(
                           padding: .symmetric(vertical: 10.px, horizontal: 20.px),
                           border: Border.all(
-                            color: _todoController.currentFilter == filter
+                            color: _todoController!.currentFilter == filter
                                 ? Color.rgb(99, 102, 241)
                                 : Color.rgb(226, 232, 240),
                             width: 2.px,
@@ -178,26 +201,26 @@ class _TodoAppState extends State<TodoApp> {
                             duration: Duration(milliseconds: 200),
                             curve: .ease,
                           ),
-                          color: _todoController.currentFilter == filter
+                          color: _todoController!.currentFilter == filter
                               ? Color.rgb(255, 255, 255)
                               : Color.rgb(100, 116, 139),
                           fontSize: 14.px,
                           fontWeight: FontWeight.w600,
-                          backgroundColor: _todoController.currentFilter == filter
+                          backgroundColor: _todoController!.currentFilter == filter
                               ? Color.rgb(99, 102, 241)
                               : Color.rgb(255, 255, 255),
                           raw: {
                             '&:hover': 'transform: translateY(-1px);',
                           },
                         ),
-                        onClick: () => _todoController.setFilter(filter),
+                        onClick: () => _todoController!.setFilter(filter),
                         [.text(_getFilterLabel(filter))],
                       ),
                   ],
                 ),
 
                 // Todo List
-                if (_todoController.filteredTodos.isEmpty)
+                if (_todoController!.filteredTodos.isEmpty)
                   div(
                     styles: Styles(
                       padding: .all(64.px),
@@ -241,7 +264,7 @@ class _TodoAppState extends State<TodoApp> {
                       listStyle: ListStyle.none,
                     ),
                     [
-                      for (final todo in _todoController.filteredTodos)
+                      for (final todo in _todoController!.filteredTodos)
                         li(
                           styles: Styles(
                             padding: .all(20.px),
@@ -304,7 +327,7 @@ class _TodoAppState extends State<TodoApp> {
                                     },
                                   ),
                                   events: {
-                                    'click': (event) => _todoController.toggleTodo(todo.id),
+                                    'click': (event) => _todoController!.toggleTodo(todo.id),
                                   },
                                   [
                                     if (todo.isCompleted) .text('✓'),
@@ -349,7 +372,7 @@ class _TodoAppState extends State<TodoApp> {
                                     },
                                   ),
                                   events: {
-                                    'click': (event) => _todoController.deleteTodo(todo.id),
+                                    'click': (event) => _todoController!.deleteTodo(todo.id),
                                   },
                                   [.text('🗑️')],
                                 ),
@@ -369,7 +392,7 @@ class _TodoAppState extends State<TodoApp> {
 
   void _addTodo() {
     if (_inputData.trim().isEmpty) return;
-    _todoController.addTodo(_inputData.trim());
+    _todoController!.addTodo(_inputData.trim());
     _inputData = '';
     setState(() {});
   }
@@ -386,7 +409,7 @@ class _TodoAppState extends State<TodoApp> {
   }
 
   String _getEmptyMessage() {
-    switch (_todoController.currentFilter) {
+    switch (_todoController!.currentFilter) {
       case TodoFilter.all:
         return 'No tasks yet. Add one above!';
       case TodoFilter.active:
@@ -398,6 +421,10 @@ class _TodoAppState extends State<TodoApp> {
 }
 
 class TodoController with ChangeNotifier {
+  TodoController({required final SharedPreferences sharedPreferences}) : _sharedPreferences = sharedPreferences;
+
+  final SharedPreferences _sharedPreferences;
+
   final List<Todo> _todos = [];
   TodoFilter _currentFilter = TodoFilter.all;
 
@@ -415,13 +442,13 @@ class TodoController with ChangeNotifier {
     }
   }
 
-  void addTodo(String title) {
-    _todos.add(
-      Todo(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        title: title,
-      ),
+  void addTodo(String title) async {
+    final todo = Todo(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      title: title,
     );
+    _todos.add(todo);
+    await _setLocalTodos(todo);
     notifyListeners();
   }
 
@@ -433,13 +460,43 @@ class TodoController with ChangeNotifier {
     }
   }
 
-  void deleteTodo(String id) {
+  void deleteTodo(String id) async {
     _todos.removeWhere((t) => t.id == id);
+    await _removeFromLocalTodos(id);
     notifyListeners();
   }
 
   void setFilter(TodoFilter filter) {
     _currentFilter = filter;
     notifyListeners();
+  }
+
+  Future<void> loadTodos() async {
+    final list = _sharedPreferences.getString('todos');
+    print('local list: $list');
+    if (list == null) return;
+    final parsedList = jsonDecode(list) as List;
+    final todos = parsedList.map((el) => Todo.fromJson(el)).toList();
+    _todos.addAll(todos);
+    notifyListeners();
+  }
+
+  Future<void> _setLocalTodos(final Todo todo) async {
+    final list = _sharedPreferences.getString('todos');
+    final List<Todo> localTodos = [];
+    if (list != null) {
+      final parsedList = jsonDecode(list) as List;
+      localTodos.addAll(parsedList.map((el) => Todo.fromJson(el)).toList());
+    }
+    localTodos.add(todo);
+    await _sharedPreferences.setString('todos', jsonEncode(localTodos.map((el) => el.toJson()).toList()));
+  }
+
+  Future<void> _removeFromLocalTodos(String id) async {
+    final list = _sharedPreferences.getString('todos');
+    final parsedList = jsonDecode(list ?? '[]') as List;
+    final todos = parsedList.map((el) => Todo.fromJson(el)).toList();
+    todos.removeWhere((el) => el.id == id);
+    await _sharedPreferences.setString('todos', jsonEncode(todos.map((el) => el.toJson()).toList()));
   }
 }

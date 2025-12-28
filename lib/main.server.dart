@@ -14,7 +14,7 @@ import 'app.dart';
 // This file is generated automatically by Jaspr, do not remove or edit.
 import 'main.server.options.dart';
 
-void main() {
+void main() async {
   // Initializes the server environment with the generated default options.
   Jaspr.initializeApp(
     options: defaultServerOptions,
