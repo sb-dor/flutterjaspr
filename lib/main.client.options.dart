@@ -6,6 +6,10 @@
 
 import 'package:jaspr/client.dart';
 
+import 'package:flutter_with_jaspr/components/counter.dart'
+    deferred as _counter;
+import 'package:flutter_with_jaspr/pages/todos.dart' deferred as _todos;
+
 /// Default [ClientOptions] for use with your Jaspr project.
 ///
 /// Use this to initialize Jaspr **before** calling [runApp].
@@ -22,4 +26,12 @@ import 'package:jaspr/client.dart';
 ///   runApp(...);
 /// }
 /// ```
-ClientOptions get defaultClientOptions => ClientOptions();
+ClientOptions get defaultClientOptions => ClientOptions(
+  clients: {
+    'counter': ClientLoader(
+      (p) => _counter.Counter(),
+      loader: _counter.loadLibrary,
+    ),
+    'todos': ClientLoader((p) => _todos.TodoApp(), loader: _todos.loadLibrary),
+  },
+);

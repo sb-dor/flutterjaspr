@@ -4,6 +4,7 @@ import 'package:flutter_with_jaspr/models/todo.dart';
 import 'package:jaspr/dom.dart';
 import 'package:jaspr/jaspr.dart';
 
+@client
 class TodoApp extends StatefulComponent {
   const TodoApp({super.key});
 
@@ -14,12 +15,13 @@ class TodoApp extends StatefulComponent {
 class _TodoAppState extends State<TodoApp> {
   final _todoController = TodoController();
   final _inputId = 'todo-input';
+  String _inputData = '';
 
   @override
   Component build(BuildContext context) {
     return ChangeNotifierBuilder(
       listenable: _todoController,
-      component: (context) {
+      builder: (context) {
         final completedCount = _todoController.todos.where((t) => t.isCompleted).length;
         final totalCount = _todoController.todos.length;
 
@@ -101,7 +103,7 @@ class _TodoAppState extends State<TodoApp> {
                         input(
                           id: _inputId,
                           type: InputType.text,
-                          value: 'Add a new task...',
+                          value: _inputData,
                           styles: Styles(
                             flex: Flex(grow: 1),
                             padding: .symmetric(vertical: 14.px, horizontal: 20.px),
@@ -117,13 +119,7 @@ class _TodoAppState extends State<TodoApp> {
                               '&:focus': 'border-color: rgb(99, 102, 241);',
                             },
                           ),
-                          events: {
-                            'keypress': (event) {
-                              if (event.type == 'Enter') {
-                                _addTodo();
-                              }
-                            },
-                          },
+                          onChange: (value) => _inputData = value as String,
                         ),
                         button(
                           styles: Styles(
@@ -372,11 +368,10 @@ class _TodoAppState extends State<TodoApp> {
   }
 
   void _addTodo() {
-    // final input = document.getElementById(_inputId) as InputElement?;
-    // if (input != null && input.value.trim().isNotEmpty) {
-    //   _todoController.addTodo(input.value.trim());
-    //   input.value = '';
-    // }
+    if (_inputData.trim().isEmpty) return;
+    _todoController.addTodo(_inputData.trim());
+    _inputData = '';
+    setState(() {});
   }
 
   String _getFilterLabel(TodoFilter filter) {

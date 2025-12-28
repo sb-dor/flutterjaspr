@@ -32,7 +32,7 @@ class _ItemsState extends State<Items> with PreloadStateMixin {
   Component build(BuildContext context) {
     return ChangeNotifierBuilder(
       listenable: _itemsLoaderController,
-      component: (context) {
+      builder: (context) {
         return section([
           // Header
           header(

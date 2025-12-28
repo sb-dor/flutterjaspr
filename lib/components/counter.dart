@@ -18,6 +18,7 @@ class CounterChangeNotifier with ChangeNotifier {
   }
 }
 
+@client
 class Counter extends StatefulComponent {
   const Counter({super.key});
 
@@ -32,7 +33,7 @@ class CounterState extends State<Counter> {
   Component build(BuildContext context) {
     return ChangeNotifierBuilder(
       listenable: _counterController,
-      component: (context) => div([
+      builder: (context) => div([
         div(classes: 'counter', [
           button(
             onClick: () {
@@ -41,6 +42,7 @@ class CounterState extends State<Counter> {
             [.text('-')],
           ),
           span([.text('${_counterController.counter}')]),
+
           button(
             onClick: () {
               _counterController.increment();

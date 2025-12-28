@@ -4,11 +4,11 @@ class ChangeNotifierBuilder extends StatefulComponent {
   const ChangeNotifierBuilder({
     super.key,
     required this.listenable,
-    required this.component,
+    required this.builder,
   });
 
   final Listenable listenable;
-  final Component Function(BuildContext context) component;
+  final Component Function(BuildContext context) builder;
 
   @override
   State<ChangeNotifierBuilder> createState() => _ChangeNotifierBuilderState();
@@ -34,6 +34,6 @@ class _ChangeNotifierBuilderState extends State<ChangeNotifierBuilder> {
 
   @override
   Component build(BuildContext context) {
-    return component.component(context);
+    return component.builder(context);
   }
 }
